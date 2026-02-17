@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alert and Assistance Network</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a365d, #2d3748);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        header {
+            padding: 40px 0;
+        }
+        
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 40px 0;
+        }
+        
+        .feature-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 20px;
+            transition: transform 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .feature-card h3 {
+            color: #ffd166;
+            margin-bottom: 10px;
+        }
+        
+        .cta-section {
+            margin: 50px 0;
+        }
+        
+        .btn {
+            background: #ff6b6b;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 10px;
+            transition: background 0.3s ease;
+        }
+        
+        .btn:hover {
+            background: #ff8e8e;
+        }
+        
+        .btn-primary {
+            background: #4ecdc4;
+        }
+        
+        .btn-primary:hover {
+            background: #6ee8e0;
+        }
+        
+        footer {
+            margin-top: 50px;
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .features {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Alert and Assistance Network</h1>
+            <p class="subtitle">Connecting communities with emergency assistance when they need it most</p>
+        </header>
+        
+        <section class="features">
+            <div class="feature-card">
+                <h3>:request Help</h3>
+                <p>Quickly submit help requests with our streamlined form for immediate assistance</p>
+            </div>
+            <div class="feature-card">
+                <h3>Emergency Alerts</h3>
+                <p>Stay informed with real-time alerts about emergencies and disasters in your area</p>
+            </div>
+            <div class="feature-card">
+                <h3>Volunteer Matching</h3>
+                <p>Connect with verified volunteers who can provide assistance in your time of need</p>
+            </div>
+            <div class="feature-card">
+                <h3>Crowdsource Alerts</h3>
+                <p>Help your community by sharing real-time information about emergencies</p>
+            </div>
+        </section>
+        
+        <section class="cta-section">
+            <h2>Ready to get started?</h2>
+            <p>Join our network to request help or volunteer your assistance</p>
+            <br>
+            <a href="/login" class="btn btn-primary">Login</a>
+            <a href="/help-requests" class="btn">Request Help</a>
+            <a href="/volunteer" class="btn">Volunteer</a>
+        </section>
+        
+        <footer>
+            <p>Alert and Assistance Network &copy; 2026 | Connecting communities during emergencies</p>
+        </footer>
+    </div>
+</body>
+</html>
