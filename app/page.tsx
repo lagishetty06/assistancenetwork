@@ -60,82 +60,115 @@ export default function HomePage() {
 
   const initializeAdvancedFeatures = async () => {
     try {
-      // Initialize i18n first
+      // Initialize i18n first since it's required for UI
       await i18nService.initialize()
       updateTranslations()
 
       i18nService.onLanguageChange(() => {
         updateTranslations()
       })
+    } catch (error) {
+      console.error("❌ Failed to initialize i18n:", error)
+    }
 
-      // Initialize Geo-fencing
-      const geoResult = await geoFencingService.initialize()
-      if (geoResult.success) {
-        setGeoFenceStatus("Active")
-        geoFencingService.onFenceAlert((fence, action) => {
-          const newAlert = {
-            id: Date.now(),
-            type: fence.severity === "critical" ? ("critical" as const) : ("warning" as const),
-            title: `Geo-fence ${action}: ${fence.name}`,
-            message: fence.alertMessage,
-            timestamp: "Just now",
-          }
-          setAlerts((prev) => [newAlert, ...prev])
-        })
-      }
-
-      // Initialize Voice Commands
-      const voiceResult = await voiceCommandService.initialize()
-      if (voiceResult.success) {
-        console.log("✅ Voice commands available")
-      }
-
-      // Initialize AI Risk Prediction
-      const aiResult = await aiRiskPredictionService.initialize()
-      if (aiResult.success) {
-        aiRiskPredictionService.onRiskPrediction((prediction) => {
-          setRiskLevel(prediction.overallRisk)
-          if (prediction.overallRisk > 0.6) {
+    // Initialize remaining services concurrently
+    const initGeoFencing = async () => {
+      try {
+        const geoResult = await geoFencingService.initialize()
+        if (geoResult.success) {
+          setGeoFenceStatus("Active")
+          geoFencingService.onFenceAlert((fence, action) => {
             const newAlert = {
               id: Date.now(),
-              type: "warning" as const,
-              title: "AI Risk Alert",
-              message: prediction.recommendations[0] || "Elevated risk detected in your area",
+              type: fence.severity === "critical" ? ("critical" as const) : ("warning" as const),
+              title: `Geo-fence ${action}: ${fence.name}`,
+              message: fence.alertMessage,
               timestamp: "Just now",
             }
             setAlerts((prev) => [newAlert, ...prev])
-          }
-        })
+          })
+        }
+      } catch (e) {
+        console.error("Geo-fencing failed", e)
       }
-
-      // Initialize Crowdsource Alerts
-      const crowdsourceResult = await crowdsourceAlertsService.initialize()
-      if (crowdsourceResult.success) {
-        crowdsourceAlertsService.onNewAlert((alert) => {
-          setCrowdsourceAlerts((prev) => prev + 1)
-          const newAlert = {
-            id: Date.now(),
-            type: alert.severity === "critical" ? ("critical" as const) : ("warning" as const),
-            title: alert.title,
-            message: alert.description,
-            timestamp: "Just now",
-          }
-          setAlerts((prev) => [newAlert, ...prev])
-        })
-      }
-
-      // Initialize Offline SMS Service
-      const offlineResult = await offlineSMSService.initialize()
-      if (offlineResult.success) {
-        const status = offlineSMSService.getQueueStatus()
-        setOfflineStatus({
-          isOnline: status.isOnline,
-          queuedMessages: status.smsQueue,
-        })
-      }
-    } catch (error) {
-      console.error("❌ Failed to initialize advanced features:", error)
     }
+
+    const initVoiceCommands = async () => {
+      try {
+        const voiceResult = await voiceCommandService.initialize()
+        if (voiceResult.success) {
+          console.log("✅ Voice commands available")
+        }
+      } catch (e) {
+        console.error("Voice commands failed", e)
+      }
+    }
+
+    const initAiRiskPrediction = async () => {
+      try {
+        const aiResult = await aiRiskPredictionService.initialize()
+        if (aiResult.success) {
+          aiRiskPredictionService.onRiskPrediction((prediction) => {
+            setRiskLevel(prediction.overallRisk)
+            if (prediction.overallRisk > 0.6) {
+              const newAlert = {
+                id: Date.now(),
+                type: "warning" as const,
+                title: "AI Risk Alert",
+                message: prediction.recommendations[0] || "Elevated risk detected in your area",
+                timestamp: "Just now",
+              }
+              setAlerts((prev) => [newAlert, ...prev])
+            }
+          })
+        }
+      } catch (e) {
+        console.error("AI Risk Prediction failed", e)
+      }
+    }
+
+    const initCrowdsourceAlerts = async () => {
+      try {
+        const crowdsourceResult = await crowdsourceAlertsService.initialize()
+        if (crowdsourceResult.success) {
+          crowdsourceAlertsService.onNewAlert((alert) => {
+            setCrowdsourceAlerts((prev) => prev + 1)
+            const newAlert = {
+              id: Date.now(),
+              type: alert.severity === "critical" ? ("critical" as const) : ("warning" as const),
+              title: alert.title,
+              message: alert.description,
+              timestamp: "Just now",
+            }
+            setAlerts((prev) => [newAlert, ...prev])
+          })
+        }
+      } catch (e) {
+        console.error("Crowdsource alerts failed", e)
+      }
+    }
+
+    const initOfflineSMS = async () => {
+      try {
+        const offlineResult = await offlineSMSService.initialize()
+        if (offlineResult.success) {
+          const status = offlineSMSService.getQueueStatus()
+          setOfflineStatus({
+            isOnline: status.isOnline,
+            queuedMessages: status.smsQueue,
+          })
+        }
+      } catch (e) {
+        console.error("Offline SMS failed", e)
+      }
+    }
+
+    // Fire them all off concurrently
+    initGeoFencing()
+    initVoiceCommands()
+    initAiRiskPrediction()
+    initCrowdsourceAlerts()
+    initOfflineSMS()
   }
 
   const updateTranslations = () => {
@@ -321,7 +354,7 @@ export default function HomePage() {
         <div className="mb-12">
           <h2 className="text-2xl font-bold mb-6 text-center">Advanced Features</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+            <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" onClick={() => (window.location.href = "/weather")}>
               <div className="h-48 bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
                 <MapPin className="h-16 w-16 text-white" />
               </div>
@@ -336,7 +369,7 @@ export default function HomePage() {
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+            <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" onClick={toggleVoiceCommands}>
               <div className="h-48 bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
                 <Mic className="h-16 w-16 text-white" />
               </div>
@@ -351,7 +384,7 @@ export default function HomePage() {
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+            <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" onClick={() => (window.location.href = "/ai-prediction")}>
               <div className="h-48 bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
                 <Brain className="h-16 w-16 text-white" />
               </div>
@@ -366,7 +399,7 @@ export default function HomePage() {
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+            <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" onClick={() => (window.location.href = "/sms-demo")}>
               <div className="h-48 bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
                 <Wifi className="h-16 w-16 text-white" />
               </div>
@@ -381,7 +414,7 @@ export default function HomePage() {
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+            <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" onClick={() => (window.location.href = "/crowdsource-alerts")}>
               <div className="h-48 bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
                 <MessageSquare className="h-16 w-16 text-white" />
               </div>
@@ -396,7 +429,7 @@ export default function HomePage() {
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+            <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" onClick={() => (window.location.href = "/contact-tree")}>
               <div className="h-48 bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center">
                 <TreePine className="h-16 w-16 text-white" />
               </div>
@@ -520,15 +553,15 @@ export default function HomePage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="text-center">
                 <p className="font-semibold text-red-800">Police</p>
-                <p className="text-2xl font-bold text-red-600">911</p>
+                <p className="text-2xl font-bold text-red-600">100</p>
               </div>
               <div className="text-center">
                 <p className="font-semibold text-red-800">Fire Department</p>
-                <p className="text-2xl font-bold text-red-600">911</p>
+                <p className="text-2xl font-bold text-red-600">101</p>
               </div>
               <div className="text-center">
                 <p className="font-semibold text-red-800">Medical Emergency</p>
-                <p className="text-2xl font-bold text-red-600">911</p>
+                <p className="text-2xl font-bold text-red-600">102</p>
               </div>
             </div>
           </CardContent>

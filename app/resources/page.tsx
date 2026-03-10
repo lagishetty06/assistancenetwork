@@ -67,7 +67,7 @@ export default function ResourcesPage() {
       name: "Fire Station #1",
       type: "emergency",
       address: "321 Elm Street, Central",
-      phone: "911",
+      phone: "101",
       hours: "24/7",
       description: "Fire and rescue services, emergency response",
       coordinates: { lat: 40.7282, lng: -74.0776 },

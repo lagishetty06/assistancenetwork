@@ -99,6 +99,7 @@ export default function AIPredictionPage() {
                 checkAndSendAlerts(result)
               })
             },
+            { timeout: 5000, maximumAge: 300000 }
           )
         } else {
           // Fallback
@@ -115,6 +116,9 @@ export default function AIPredictionPage() {
           setPrediction(newPrediction)
           checkAndSendAlerts(newPrediction)
         })
+      } else {
+        setLoading(false)
+        console.error("AI service init failed:", initResult.error)
       }
     } catch (error) {
       console.error("Failed to initialize AI service:", error)
