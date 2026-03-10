@@ -28,24 +28,11 @@ import { aiRiskPredictionService } from "@/lib/ai-risk-prediction"
 import { crowdsourceAlertsService } from "@/lib/crowdsource-alerts"
 import { offlineSMSService } from "@/lib/offline-sms-service"
 import { i18nService } from "@/lib/i18n"
+import { realTimeAlertsService } from "@/lib/realtime-alerts"
 
 export default function HomePage() {
-  const [alerts, setAlerts] = useState([
-    {
-      id: 1,
-      type: "critical" as const,
-      title: "Severe Weather Warning",
-      message: "Heavy rainfall expected in the next 2 hours. Avoid low-lying areas and stay indoors.",
-      timestamp: "2 minutes ago",
-    },
-    {
-      id: 2,
-      type: "warning" as const,
-      title: "Road Closure",
-      message: "Main Street is closed due to flooding. Use alternate routes.",
-      timestamp: "15 minutes ago",
-    },
-  ])
+  const [alerts, setAlerts] = useState<any[]>([])
+  const [isLoadingAlerts, setIsLoadingAlerts] = useState(true)
 
   const [isVoiceActive, setIsVoiceActive] = useState(false)
   const [riskLevel, setRiskLevel] = useState(0)
@@ -71,6 +58,33 @@ export default function HomePage() {
       console.error("❌ Failed to initialize i18n:", error)
     }
 
+    // Fetch Real-time External Alerts
+    const fetchAlerts = async () => {
+      try {
+        const liveAlerts = await realTimeAlertsService.fetchLiveAlerts()
+        if (liveAlerts.length > 0) {
+          // If we successfully fetched alerts, display them
+          setAlerts(liveAlerts)
+        } else {
+          // Fallback if the fetch fails or finds nothing
+          setAlerts([{
+            id: 'fallback-1',
+            type: "info",
+            title: "No Active Emergencies",
+            message: "There are currently no major active emergencies reported in your region. Stay safe.",
+            timestamp: "Just now",
+            address: "All Regions",
+            situation: "All Clear"
+          }])
+        }
+      } catch (err) {
+        console.error("Failed fetching live alerts", err)
+      } finally {
+        setIsLoadingAlerts(false)
+      }
+    }
+    fetchAlerts()
+
     // Initialize remaining services concurrently
     const initGeoFencing = async () => {
       try {
@@ -84,6 +98,8 @@ export default function HomePage() {
               title: `Geo-fence ${action}: ${fence.name}`,
               message: fence.alertMessage,
               timestamp: "Just now",
+              address: "Your Current Location",
+              situation: `Geo-fence ${action}`,
             }
             setAlerts((prev) => [newAlert, ...prev])
           })
@@ -117,6 +133,8 @@ export default function HomePage() {
                 title: "AI Risk Alert",
                 message: prediction.recommendations[0] || "Elevated risk detected in your area",
                 timestamp: "Just now",
+                address: prediction.location.address || "Analyzed Location",
+                situation: "Elevated Risk",
               }
               setAlerts((prev) => [newAlert, ...prev])
             }
@@ -139,6 +157,8 @@ export default function HomePage() {
               title: alert.title,
               message: alert.description,
               timestamp: "Just now",
+              address: alert.location.address || "Community Location",
+              situation: alert.type || "Community Report",
             }
             setAlerts((prev) => [newAlert, ...prev])
           })
@@ -296,7 +316,12 @@ export default function HomePage() {
         </div>
 
         {/* Active Alerts */}
-        {alerts.length > 0 && (
+        {isLoadingAlerts ? (
+          <div className="mb-8 flex justify-center items-center py-6">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+            <span className="ml-3 text-gray-500 font-medium tracking-wide">Fetching live alerts...</span>
+          </div>
+        ) : alerts.length > 0 && (
           <div className="mb-8">
             <h2 className="text-2xl font-bold mb-4 flex items-center">
               <AlertTriangle className="h-6 w-6 mr-2 text-red-600" />
@@ -309,6 +334,9 @@ export default function HomePage() {
                 title={alert.title}
                 message={alert.message}
                 timestamp={alert.timestamp}
+                address={alert.address}
+                situation={alert.situation}
+                link={alert.link}
                 onDismiss={() => dismissAlert(alert.id)}
               />
             ))}
